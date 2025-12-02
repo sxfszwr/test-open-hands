@@ -1,29 +1,185 @@
-# test-open-hands
+# 超速告警模块 (OverspeedWarning)
 
-A small test repository named "test-open-hands". This README provides basic information about the project and how to get started.
+## 概述
 
-## About
+本项目实现了一个符合汽车电子软件开发标准的超速告警模块，用于实时监控车辆速度并在超速时产生告警信号。
 
-This repository appears to be a minimal/test project. Add a short description here describing the repository's purpose.
+## 模块信息
 
-## Getting started
+- **模块名称**: OverspeedWarning
+- **模块标识**: OSW_001
+- **版本**: V1.0
+- **执行周期**: 10ms
+- **响应时间**: ≤10ms
 
-1. Clone the repository:
+## 功能特性
 
-   git clone https://github.com/sxfszwr/test-open-hands.git
-   cd test-open-hands
+### 主要功能
+1. **速度监控**: 周期性监测车辆当前速度
+2. **阈值判断**: 比较当前速度与预设速度阈值
+3. **告警生成**: 当速度超过阈值时产生超速告警信号
+4. **异常处理**: 处理输入信号异常和配置错误情况
 
-2. Follow repository-specific instructions (if any) for building or running the project. If this repo contains code, add details here about languages, dependencies, and commands.
+### 性能要求
+- 执行周期: 10ms固定周期执行
+- 响应时间: 速度超过阈值后，10ms内更新告警状态
+- 数据精度: 速度值处理精度为0.1 km/h
+- 实时性: 保证周期执行的确定性
 
-## Development
+## 接口定义
 
-- Add development setup instructions, tests, and how to run them.
-- Explain branching and contribution workflow.
+### 输入接口
+| 接口名称 | 数据类型 | 范围/约束 | 更新频率 | 来源 |
+|---------|---------|----------|---------|------|
+| VehicleSpeed | float | ≥0.0 km/h, 有效范围[0.0, 300.0] | 10ms | 车辆速度传感器 |
+| SpeedLimit | float | ≥0.0 km/h, 有效范围[30.0, 120.0] | 配置时更新 | 上层配置系统 |
 
-## Contributing
+### 输出接口
+| 接口名称 | 数据类型 | 范围/约束 | 更新频率 | 目标 |
+|---------|---------|----------|---------|------|
+| OverspeedAlarm | bool | {true, false} | 10ms | 告警显示系统 |
+| ErrorStatus | uint8_t | 0:正常, 1:速度信号无效, 2:阈值配置错误 | 状态变化时更新 | 故障诊断系统 |
 
-Contributions are welcome. Open issues or pull requests to propose changes. If you have contribution guidelines, link or summarize them here.
+## 文件结构
 
-## License
+```
+.
+├── overspeed_warning.h    # 模块头文件
+├── overspeed_warning.c    # 模块实现文件
+├── main_example.c         # 使用示例
+├── unit_test.c           # 单元测试
+├── Makefile              # 编译配置
+└── README.md             # 说明文档
+```
 
-Add a license file (LICENSE) to clarify how this repository may be used. If unsure, consider using an OSI-approved license such as MIT.
+## 编译和运行
+
+### 编译
+```bash
+make all
+```
+
+### 运行示例
+```bash
+make run
+```
+
+### 运行单元测试
+```bash
+make test
+```
+
+### 清理编译产物
+```bash
+make clean
+```
+
+## API 使用说明
+
+### 初始化
+```c
+#include "overspeed_warning.h"
+
+// 模块初始化
+OSW_Init();
+```
+
+### 周期调用
+```c
+// 在10ms周期任务中调用
+float current_speed = 85.0f;  // 当前车速 km/h
+float speed_limit = 80.0f;    // 速度限制 km/h
+
+OSW_MainFunction(current_speed, speed_limit);
+```
+
+### 获取状态
+```c
+// 获取告警状态
+bool is_overspeed = OSW_GetAlarmStatus();
+
+// 获取错误状态
+uint8_t error_code = OSW_GetErrorStatus();
+```
+
+### 动态配置
+```c
+// 设置新的速度阈值
+bool success = OSW_SetSpeedLimit(100.0f);
+```
+
+## 错误状态码
+
+| 错误码 | 宏定义 | 描述 |
+|-------|--------|------|
+| 0x00 | OSW_ERROR_NONE | 正常状态 |
+| 0x01 | OSW_ERROR_SPEED_NAN | 速度信号为NaN |
+| 0x02 | OSW_ERROR_SPEED_RANGE | 速度超出有效范围 |
+| 0x03 | OSW_ERROR_LIMIT_INVALID | 速度阈值无效 |
+| 0x04 | OSW_ERROR_LIMIT_RANGE | 速度阈值超出配置范围 |
+
+## 子模块架构
+
+模块采用分层设计，包含以下子模块：
+
+1. **InputValidation**: 输入验证子模块
+   - 验证输入信号的完整性和有效性
+   - 检查数值范围和NaN值
+
+2. **SpeedComparison**: 速度比较子模块
+   - 执行速度比较逻辑
+   - 仅在输入有效时执行比较
+
+3. **AlarmGeneration**: 告警生成子模块
+   - 生成和更新告警状态
+   - 处理输入无效时的告警逻辑
+
+4. **ErrorHandler**: 错误处理子模块
+   - 管理模块错误状态
+   - 提供错误状态清除机制
+
+## 测试用例
+
+### 示例程序测试场景
+1. **正常工作场景**: 测试不同速度下的告警生成
+2. **动态配置**: 测试运行时速度阈值调整
+3. **异常输入处理**: 测试各种异常输入的处理
+4. **错误恢复**: 测试从异常状态恢复到正常状态
+
+### 单元测试覆盖
+单元测试程序包含38个测试用例，覆盖以下方面：
+
+1. **InputValidation子模块** (11个测试)
+   - 正常输入验证
+   - 各种异常输入检测（NaN、范围超限等）
+   - 边界值测试
+
+2. **SpeedComparison子模块** (5个测试)
+   - 速度比较逻辑
+   - 输入有效性处理
+   - 边界条件测试
+
+3. **AlarmGeneration子模块** (4个测试)
+   - 告警生成逻辑
+   - 异常情况处理
+
+4. **ErrorHandler子模块** (5个测试)
+   - 错误状态管理
+   - 错误清除机制
+
+5. **主模块集成测试** (13个测试)
+   - 模块初始化
+   - 完整工作流程
+   - 动态配置功能
+
+## 注意事项
+
+1. 本模块需要链接数学库 (`-lm`)
+2. 使用C99标准编译
+3. 确保在实际应用中按照10ms周期调用主函数
+4. 输入数据应来自可靠的传感器源
+5. 错误状态应及时处理和上报
+
+## 许可证
+
+本项目仅供学习和参考使用。
