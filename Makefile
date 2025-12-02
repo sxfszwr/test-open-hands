@@ -1,67 +1,67 @@
 # Makefile for OverspeedWarning module
-# 超速告警模块编译配置
+# Overspeed warning module build configuration
 
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c99 -O2 -g
 LDFLAGS = -lm
 
-# 源文件
+# Source files
 SOURCES = overspeed_warning.c main_example.c
 OBJECTS = $(SOURCES:.c=.o)
 TARGET = overspeed_warning_demo
 
-# 单元测试
+# Unit test files
 TEST_SOURCES = overspeed_warning.c unit_test.c
 TEST_OBJECTS = $(TEST_SOURCES:.c=.o)
 TEST_TARGET = unit_test
 
-# 头文件
+# Header files
 HEADERS = overspeed_warning.h
 
-# 默认目标
+# Default target
 all: $(TARGET)
 
-# 编译可执行文件
+# Build executable
 $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
-# 编译单元测试
+# Build unit test
 $(TEST_TARGET): $(TEST_OBJECTS)
 	$(CC) $(TEST_OBJECTS) -o $(TEST_TARGET) $(LDFLAGS)
 
-# 编译目标文件
+# Build object files
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# 清理编译产物
+# Clean build artifacts
 clean:
 	rm -f $(OBJECTS) $(TEST_OBJECTS) $(TARGET) $(TEST_TARGET)
 
-# 运行示例
+# Run example
 run: $(TARGET)
 	./$(TARGET)
 
-# 运行单元测试
+# Run unit tests
 test: $(TEST_TARGET)
 	./$(TEST_TARGET)
 
-# 安装（可选）
+# Install (optional)
 install: $(TARGET)
 	cp $(TARGET) /usr/local/bin/
 
-# 卸载（可选）
+# Uninstall (optional)
 uninstall:
 	rm -f /usr/local/bin/$(TARGET)
 
-# 显示帮助信息
+# Show help information
 help:
-	@echo "可用的make目标:"
-	@echo "  all       - 编译所有文件（默认）"
-	@echo "  clean     - 清理编译产物"
-	@echo "  run       - 编译并运行示例程序"
-	@echo "  test      - 编译并运行单元测试"
-	@echo "  install   - 安装到系统路径"
-	@echo "  uninstall - 从系统路径卸载"
-	@echo "  help      - 显示此帮助信息"
+	@echo "Available make targets:"
+	@echo "  all       - Build all files (default)"
+	@echo "  clean     - Clean build artifacts"
+	@echo "  run       - Build and run example program"
+	@echo "  test      - Build and run unit tests"
+	@echo "  install   - Install to system path"
+	@echo "  uninstall - Uninstall from system path"
+	@echo "  help      - Show this help information"
 
 .PHONY: all clean run test install uninstall help
