@@ -1,0 +1,39 @@
+# Compiled object files
+*.o
+
+# Executables
+overspeed_warning_demo
+overspeed_warning_demo_en
+unit_test
+unit_test_en
+
+# Build artifacts
+*.exe
+*.out
+*.app
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
